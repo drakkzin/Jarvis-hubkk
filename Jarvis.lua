@@ -1,5 +1,5 @@
 -- JARVIS | Blade Ball | Delta
--- Versão corrigida (mais estável)
+-- Versão Corrigida (GUI primeiro)
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -7,7 +7,6 @@ local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
-local TeleportService = game:GetService("TeleportService")
 local Stats = game:GetService("Stats")
 
 local LocalPlayer = Players.LocalPlayer
@@ -89,7 +88,7 @@ local function Notify(title, text, tipo)
 	end)
 end
 
--- ====================== GUI PRIMEIRO ======================
+-- ====================== GUI ======================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "JARVIS"
 ScreenGui.ResetOnSpawn = false
@@ -117,7 +116,6 @@ stroke.Color = Theme.Accent
 stroke.Thickness = 1.4
 stroke.Transparency = 0.3
 
--- Sidebar
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, isMobile() and 64 or 150, 1, 0)
 Sidebar.BackgroundColor3 = Theme.Sidebar
@@ -344,7 +342,6 @@ CloseBtn.MouseButton1Click:Connect(function()
 	ScreenGui:Destroy()
 end)
 
--- Ativa Visuals por padrão
 if CategoryButtons["Visuals"] then
 	CategoryButtons["Visuals"].Button.BackgroundColor3 = Theme.Panel
 	CategoryButtons["Visuals"].Icon.TextColor3 = Theme.Accent
@@ -354,7 +351,6 @@ if CategoryButtons["Visuals"] then
 	loadVisuals()
 end
 
--- Arrastar (PC)
 if not isMobile() then
 	local dragging, dragStart, startPos
 	Header.InputBegan:Connect(function(input)
@@ -377,54 +373,27 @@ if not isMobile() then
 	end)
 end
 
--- ====================== SEGURANÇA (com proteção) ======================
+-- Segurança (protegida)
 task.spawn(function()
-	local success, err = pcall(function()
-		if not getrawmetatable or not newcclosure or not setreadonly then
-			Notify("Security", "Executor não suporta hooks avançados", "warning")
-			return
-		end
-
-		local mt = getrawmetatable(game)
-		local oldNamecall = mt.__namecall
-		setreadonly(mt, false)
-
-		mt.__namecall = newcclosure(function(self, ...)
-			local method = getnamecallmethod()
-			if method == "Kick" and Config.AntiKick then
-				Notify("Security", "Kick bloqueado", "warning")
-				return
-			end
-			if (method == "FireServer" or method == "InvokeServer") and Config.AntiKick then
-				local name = tostring(self.Name):lower()
-				if name:find("kick") or name:find("ban") then
-					Notify("Security", "Remote de Kick/Ban bloqueado", "warning")
+	pcall(function()
+		if getrawmetatable and newcclosure and setreadonly then
+			local mt = getrawmetatable(game)
+			local old = mt.__namecall
+			setreadonly(mt, false)
+			mt.__namecall = newcclosure(function(self, ...)
+				local method = getnamecallmethod()
+				if method == "Kick" and Config.AntiKick then
+					Notify("Security", "Kick bloqueado", "warning")
 					return
 				end
-			end
-			return oldNamecall(self, ...)
-		end)
-
-		setreadonly(mt, true)
-
-		local oldKick = LocalPlayer.Kick
-		LocalPlayer.Kick = function()
-			if Config.AntiKick then
-				Notify("Security", "LocalPlayer:Kick bloqueado", "warning")
-				return
-			end
-			return oldKick(LocalPlayer)
+				return old(self, ...)
+			end)
+			setreadonly(mt, true)
 		end
-
-		Notify("Security", "Anti-Kick ativado", "success")
 	end)
-
-	if not success then
-		warn("[JARVIS] Erro na segurança:", err)
-	end
 end)
 
--- ====================== VISUAIS ======================
+-- Ball Velocity + Overlay
 local VelocityGui = Instance.new("ScreenGui")
 VelocityGui.Name = "JARVIS_Velocity"
 VelocityGui.ResetOnSpawn = false
@@ -511,5 +480,5 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
-Notify("J.A.R.V.I.S", "Interface carregada com sucesso", "success")
-print("[JARVIS] Script carregado.")
+Notify("J.A.R.V.I.S", "Interface carregada", "success")
+print("[JARVIS] Script carregado com sucesso.")
