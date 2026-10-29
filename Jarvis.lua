@@ -13,9 +13,8 @@ local Stats = game:GetService("Stats")
 local LP = Players.LocalPlayer
 local PG = LP:WaitForChild("PlayerGui")
 
--- limpa versões antigas
 pcall(function()
-	for _, n in ipairs({"JARVIS", "DRAKJARVIS", "MemeHub", "ZyxHub"}) do
+	for _, n in ipairs({"JARVIS", "DRAKJARVIS", "MemeHub", "ZyxHub", "JARVIS_Float", "JARVIS_Vel", "JARVIS_Over"}) do
 		local o = PG:FindFirstChild(n) or CoreGui:FindFirstChild(n)
 		if o then o:Destroy() end
 	end
@@ -26,7 +25,6 @@ local function GG()
 	return (ok and type(g) == "table") and g or _G
 end
 
--- ====================== THEME SYSTEM (Meme Hub style) ======================
 local function loadJSON(name, def)
 	local d = def
 	pcall(function()
@@ -41,9 +39,7 @@ end
 local function saveJSON(name, data)
 	pcall(function()
 		GG()["Jarvis_"..name] = data
-		if writefile then
-			writefile("Jarvis_"..name..".json", HttpService:JSONEncode(data))
-		end
+		if writefile then writefile("Jarvis_"..name..".json", HttpService:JSONEncode(data)) end
 	end)
 end
 
@@ -93,7 +89,6 @@ local function stroke(p, col, th, tr)
 	s.Parent = p
 end
 
--- ====================== CONFIG ======================
 local Config = {
 	BallVelocity = false,
 	Overlays = false,
@@ -102,7 +97,6 @@ local Config = {
 	AntiTeleport = true,
 }
 
--- ====================== NOTIFY ======================
 local function Notify(title, text, tipo)
 	local gui = CoreGui:FindFirstChild("DRAKJARVIS")
 	if not gui then return end
@@ -166,6 +160,7 @@ Main.BackgroundColor3 = T.bg
 Main.BackgroundTransparency = Theme.guiTrans
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
+Main.Visible = true
 Main.Parent = ScreenGui
 corner(Main, 14)
 stroke(Main, T.accent, 1.6, 0.25)
@@ -175,11 +170,9 @@ if isMobile then
 	Main.Position = UDim2.new(0.025, 0, 0.09, 0)
 end
 
--- UIScale
 local UIScale = Instance.new("UIScale", Main)
 UIScale.Scale = Theme.uiScale or 1
 
--- Wallpaper
 local Wall = Instance.new("ImageLabel", Main)
 Wall.Size = UDim2.new(1, 0, 1, 0)
 Wall.BackgroundTransparency = 1
@@ -190,7 +183,7 @@ if Theme.wallpaper and Theme.wallpaper \~= "" then
 	pcall(function() Wall.Image = Theme.wallpaper end)
 end
 
--- ====================== SIDEBAR ======================
+-- Sidebar
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, isMobile and 64 or 158, 1, 0)
 Sidebar.BackgroundColor3 = T.sidebar
@@ -241,7 +234,6 @@ Status.TextSize = 11
 Status.TextXAlignment = isMobile and Enum.TextXAlignment.Center or Enum.TextXAlignment.Left
 Status.Parent = Sidebar
 
--- Categories
 local categories = {
 	{Name = "Visuals", Icon = "👁"},
 	{Name = "Security", Icon = "🛡"},
@@ -251,7 +243,6 @@ local categories = {
 
 local CatButtons = {}
 local ContentScroll
-local currentTab = "Visuals"
 
 local function clearContent()
 	for _, c in ipairs(ContentScroll:GetChildren()) do
@@ -348,21 +339,7 @@ end
 
 local function loadConfig()
 	clearContent()
-
-	-- Accent presets
-	local c1 = createCard("Accent Color", "Cor principal da interface")
-	local function setAccent(r,g,b)
-		Theme.accentR, Theme.accentG, Theme.accentB = r, g, b
-		T.accent = accent()
-		saveJSON("Theme", Theme)
-		Notify("Theme", "Accent atualizado", "success")
-	end
-	-- simple buttons inside would need more space, keep simple for now
-
-	local c2 = createCard("UI Scale", "Tamanho geral da interface")
-	-- placeholders for now
-
-	ContentScroll.CanvasSize = UDim2.new(0, 0, 0, 200)
+	ContentScroll.CanvasSize = UDim2.new(0, 0, 0, 100)
 end
 
 for i, cat in ipairs(categories) do
@@ -397,7 +374,6 @@ for i, cat in ipairs(categories) do
 	label.Visible = not isMobile
 
 	btn.MouseButton1Click:Connect(function()
-		currentTab = cat.Name
 		for _, b in pairs(CatButtons) do
 			b.Button.BackgroundTransparency = 1
 			b.Icon.TextColor3 = T.dim
@@ -417,7 +393,6 @@ for i, cat in ipairs(categories) do
 	CatButtons[cat.Name] = {Button = btn, Icon = icon, Label = label}
 end
 
--- Content area
 local Content = Instance.new("Frame")
 Content.Size = UDim2.new(1, isMobile and -72 or -166, 1, -52)
 Content.Position = UDim2.new(0, isMobile and 68 or 162, 0, 52)
@@ -435,7 +410,6 @@ ContentScroll.CanvasSize = UDim2.new(0, 0, 0, 400)
 ContentScroll.Parent = Content
 Instance.new("UIListLayout", ContentScroll).Padding = UDim.new(0, 9)
 
--- Header
 local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, isMobile and -72 or -166, 0, 48)
 Header.Position = UDim2.new(0, isMobile and 68 or 162, 0, 0)
@@ -465,7 +439,6 @@ CloseBtn.MouseButton1Click:Connect(function()
 	Main.Visible = false
 end)
 
--- Default tab
 if CatButtons["Visuals"] then
 	CatButtons["Visuals"].Button.BackgroundColor3 = Color3.fromRGB(20, 28, 48)
 	CatButtons["Visuals"].Button.BackgroundTransparency = 0.3
@@ -474,7 +447,7 @@ if CatButtons["Visuals"] then
 	loadVisuals()
 end
 
--- Drag
+-- Drag PC
 if not isMobile then
 	local dragging, dragStart, startPos
 	Header.InputBegan:Connect(function(input)
@@ -522,7 +495,6 @@ FloatTxt.Font = Enum.Font.GothamBlack
 FloatTxt.TextScaled = true
 FloatTxt.Parent = FloatBtn
 
--- drag float
 do
 	local dragging, start, pos, moved
 	FloatBtn.InputBegan:Connect(function(i)
@@ -550,6 +522,39 @@ do
 	end)
 end
 
+-- ====================== 3 / 4 FINGER TOGGLE ======================
+local touchCount = 0
+local lastToggle = 0
+
+UIS.TouchStarted:Connect(function(touch, processed)
+	touchCount = touchCount + 1
+end)
+
+UIS.TouchEnded:Connect(function(touch, processed)
+	touchCount = math.max(0, touchCount - 1)
+end)
+
+UIS.InputBegan:Connect(function(input, processed)
+	if processed then return end
+
+	-- 3 ou 4 dedos
+	if input.UserInputType == Enum.UserInputType.Touch then
+		task.wait(0.05)
+		if touchCount >= 3 and tick() - lastToggle > 0.4 then
+			lastToggle = tick()
+			Main.Visible = not Main.Visible
+			Notify("JARVIS", Main.Visible and "UI aberta" or "UI fechada", "success")
+		end
+	end
+end)
+
+-- RightShift também
+UIS.InputBegan:Connect(function(input, g)
+	if not g and input.KeyCode == Enum.KeyCode.RightShift then
+		Main.Visible = not Main.Visible
+	end
+end)
+
 -- ====================== SECURITY ======================
 task.spawn(function()
 	pcall(function()
@@ -570,7 +575,7 @@ task.spawn(function()
 	end)
 end)
 
--- ====================== VISUALS LOGIC ======================
+-- ====================== VISUALS ======================
 local VelGui = Instance.new("ScreenGui")
 VelGui.Name = "JARVIS_Vel"
 VelGui.ResetOnSpawn = false
@@ -656,5 +661,5 @@ RS.RenderStepped:Connect(function()
 	end
 end)
 
-Notify("DRAK JARVIS", "UI personalizável carregada", "success")
-print("[DRAK JARVIS] Fully customizable UI loaded.")
+Notify("DRAK JARVIS", "UI carregada · 3 dedos para abrir/fechar", "success")
+print("[DRAK JARVIS] Loaded with 3/4 finger toggle.")
