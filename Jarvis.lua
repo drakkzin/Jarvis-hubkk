@@ -1,4 +1,4 @@
---[[ DRAK JARVIS · Blade Ball · Fully Customizable UI ]]
+--[[ DRAK JARVIS · Blade Ball ]]
 if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Players = game:GetService("Players")
@@ -11,11 +11,11 @@ local Workspace = game:GetService("Workspace")
 local Stats = game:GetService("Stats")
 
 local LP = Players.LocalPlayer
-local PG = LP:WaitForChild("PlayerGui")
+local PG = LP:WaitForChild("PlayerGui", 10)
 
 pcall(function()
-	for _, n in ipairs({"JARVIS", "DRAKJARVIS", "MemeHub", "ZyxHub", "JARVIS_Float", "JARVIS_Vel", "JARVIS_Over"}) do
-		local o = PG:FindFirstChild(n) or CoreGui:FindFirstChild(n)
+	for _, n in ipairs({"JARVIS","DRAKJARVIS","MemeHub","ZyxHub","JARVIS_Float","JARVIS_Vel","JARVIS_Over"}) do
+		local o = (PG and PG:FindFirstChild(n)) or CoreGui:FindFirstChild(n)
 		if o then o:Destroy() end
 	end
 end)
@@ -53,10 +53,11 @@ local Theme = loadJSON("Theme", {
 	wallTrans = 0.55,
 	wallpaper = "",
 	floatImage = "",
-	floatSize = 58,
+	floatSize = 56,
 	uiScale = 1,
 	winW = 820,
 	winH = 500,
+	showFloat = true,
 })
 
 local function C(r,g,b) return Color3.fromRGB(r,g,b) end
@@ -68,7 +69,6 @@ local T = {
 	card = C(Theme.cardR, Theme.cardG, Theme.cardB),
 	text = C(235, 242, 255),
 	dim = C(130, 145, 170),
-	ghost = C(90, 100, 125),
 	accent = accent(),
 	success = C(0, 220, 150),
 	danger = C(255, 80, 100),
@@ -76,17 +76,14 @@ local T = {
 }
 
 local function corner(p, r)
-	local c = Instance.new("UICorner")
-	c.CornerRadius = UDim.new(0, r or 10)
-	c.Parent = p
+	Instance.new("UICorner", p).CornerRadius = UDim.new(0, r or 10)
 end
 
 local function stroke(p, col, th, tr)
-	local s = Instance.new("UIStroke")
+	local s = Instance.new("UIStroke", p)
 	s.Color = col or T.line
 	s.Thickness = th or 1
 	s.Transparency = tr or 0.4
-	s.Parent = p
 end
 
 local Config = {
@@ -95,6 +92,7 @@ local Config = {
 	AntiKick = true,
 	AntiBan = true,
 	AntiTeleport = true,
+	ShowFloat = Theme.showFloat \~= false,
 }
 
 local function Notify(title, text, tipo)
@@ -105,18 +103,18 @@ local function Notify(title, text, tipo)
 	if tipo == "error" then color = T.danger end
 
 	local n = Instance.new("Frame")
-	n.Size = UDim2.new(0, 290, 0, 62)
-	n.Position = UDim2.new(1, 25, 1, -95)
+	n.Size = UDim2.new(0, 280, 0, 58)
+	n.Position = UDim2.new(1, 20, 1, -90)
 	n.BackgroundColor3 = T.card
 	n.BackgroundTransparency = Theme.cardTrans
 	n.BorderSizePixel = 0
 	n.Parent = gui
 	corner(n, 10)
-	stroke(n, color, 1.4, 0.2)
+	stroke(n, color, 1.3, 0.2)
 
 	local t = Instance.new("TextLabel", n)
-	t.Size = UDim2.new(1, -16, 0, 22)
-	t.Position = UDim2.new(0, 12, 0, 8)
+	t.Size = UDim2.new(1, -14, 0, 20)
+	t.Position = UDim2.new(0, 10, 0, 7)
 	t.BackgroundTransparency = 1
 	t.Text = title
 	t.TextColor3 = color
@@ -125,8 +123,8 @@ local function Notify(title, text, tipo)
 	t.TextXAlignment = Enum.TextXAlignment.Left
 
 	local d = Instance.new("TextLabel", n)
-	d.Size = UDim2.new(1, -16, 0, 24)
-	d.Position = UDim2.new(0, 12, 0, 30)
+	d.Size = UDim2.new(1, -14, 0, 22)
+	d.Position = UDim2.new(0, 10, 0, 28)
 	d.BackgroundTransparency = 1
 	d.Text = text
 	d.TextColor3 = T.text
@@ -134,15 +132,15 @@ local function Notify(title, text, tipo)
 	d.TextSize = 12
 	d.TextXAlignment = Enum.TextXAlignment.Left
 
-	n:TweenPosition(UDim2.new(1, -315, 1, -95), "Out", "Quart", 0.3, true)
-	task.delay(3, function()
-		n:TweenPosition(UDim2.new(1, 25, 1, -95), "In", "Quart", 0.25, true)
-		task.wait(0.3)
+	n:TweenPosition(UDim2.new(1, -300, 1, -90), "Out", "Quart", 0.28, true)
+	task.delay(2.8, function()
+		n:TweenPosition(UDim2.new(1, 20, 1, -90), "In", "Quart", 0.22, true)
+		task.wait(0.25)
 		n:Destroy()
 	end)
 end
 
--- ====================== MAIN GUI ======================
+-- ====================== MAIN ======================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "DRAKJARVIS"
 ScreenGui.ResetOnSpawn = false
@@ -163,11 +161,11 @@ Main.ClipsDescendants = true
 Main.Visible = true
 Main.Parent = ScreenGui
 corner(Main, 14)
-stroke(Main, T.accent, 1.6, 0.25)
+stroke(Main, T.accent, 1.5, 0.25)
 
 if isMobile then
-	Main.Size = UDim2.new(0.95, 0, 0.82, 0)
-	Main.Position = UDim2.new(0.025, 0, 0.09, 0)
+	Main.Size = UDim2.new(0.95, 0, 0.80, 0)
+	Main.Position = UDim2.new(0.025, 0, 0.10, 0)
 end
 
 local UIScale = Instance.new("UIScale", Main)
@@ -185,7 +183,7 @@ end
 
 -- Sidebar
 local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, isMobile and 64 or 158, 1, 0)
+Sidebar.Size = UDim2.new(0, isMobile and 62 or 150, 1, 0)
 Sidebar.BackgroundColor3 = T.sidebar
 Sidebar.BackgroundTransparency = Theme.sidebarTrans
 Sidebar.BorderSizePixel = 0
@@ -193,39 +191,27 @@ Sidebar.Parent = Main
 corner(Sidebar, 14)
 
 local sideFix = Instance.new("Frame")
-sideFix.Size = UDim2.new(0, 18, 1, 0)
-sideFix.Position = UDim2.new(1, -18, 0, 0)
+sideFix.Size = UDim2.new(0, 16, 1, 0)
+sideFix.Position = UDim2.new(1, -16, 0, 0)
 sideFix.BackgroundColor3 = T.sidebar
 sideFix.BackgroundTransparency = Theme.sidebarTrans
 sideFix.BorderSizePixel = 0
 sideFix.Parent = Sidebar
 
 local Logo = Instance.new("TextLabel")
-Logo.Size = UDim2.new(1, -10, 0, 28)
-Logo.Position = UDim2.new(0, 8, 0, 12)
+Logo.Size = UDim2.new(1, -8, 0, 26)
+Logo.Position = UDim2.new(0, 6, 0, 10)
 Logo.BackgroundTransparency = 1
 Logo.Text = isMobile and "J" or "DRAK JARVIS"
 Logo.TextColor3 = T.accent
 Logo.Font = Enum.Font.GothamBold
-Logo.TextSize = isMobile and 18 or 15
+Logo.TextSize = isMobile and 17 or 14
 Logo.TextXAlignment = isMobile and Enum.TextXAlignment.Center or Enum.TextXAlignment.Left
 Logo.Parent = Sidebar
 
-local Sub = Instance.new("TextLabel")
-Sub.Size = UDim2.new(1, -10, 0, 14)
-Sub.Position = UDim2.new(0, 8, 0, 38)
-Sub.BackgroundTransparency = 1
-Sub.Text = "Blade Ball"
-Sub.TextColor3 = T.dim
-Sub.Font = Enum.Font.Gotham
-Sub.TextSize = 11
-Sub.TextXAlignment = isMobile and Enum.TextXAlignment.Center or Enum.TextXAlignment.Left
-Sub.Visible = not isMobile
-Sub.Parent = Sidebar
-
 local Status = Instance.new("TextLabel")
-Status.Size = UDim2.new(1, -10, 0, 14)
-Status.Position = UDim2.new(0, 8, 0, 54)
+Status.Size = UDim2.new(1, -8, 0, 14)
+Status.Position = UDim2.new(0, 6, 0, 36)
 Status.BackgroundTransparency = 1
 Status.Text = "● Online"
 Status.TextColor3 = T.success
@@ -245,6 +231,7 @@ local CatButtons = {}
 local ContentScroll
 
 local function clearContent()
+	if not ContentScroll then return end
 	for _, c in ipairs(ContentScroll:GetChildren()) do
 		if not c:IsA("UIListLayout") then c:Destroy() end
 	end
@@ -252,7 +239,7 @@ end
 
 local function createCard(title, desc)
 	local card = Instance.new("Frame")
-	card.Size = UDim2.new(1, 0, 0, 68)
+	card.Size = UDim2.new(1, 0, 0, 66)
 	card.BackgroundColor3 = T.card
 	card.BackgroundTransparency = Theme.cardTrans
 	card.BorderSizePixel = 0
@@ -261,8 +248,8 @@ local function createCard(title, desc)
 	stroke(card, T.line, 1, 0.5)
 
 	local t = Instance.new("TextLabel", card)
-	t.Size = UDim2.new(1, -70, 0, 22)
-	t.Position = UDim2.new(0, 14, 0, 11)
+	t.Size = UDim2.new(1, -68, 0, 20)
+	t.Position = UDim2.new(0, 12, 0, 10)
 	t.BackgroundTransparency = 1
 	t.Text = title
 	t.TextColor3 = T.text
@@ -271,8 +258,8 @@ local function createCard(title, desc)
 	t.TextXAlignment = Enum.TextXAlignment.Left
 
 	local d = Instance.new("TextLabel", card)
-	d.Size = UDim2.new(1, -70, 0, 20)
-	d.Position = UDim2.new(0, 14, 0, 35)
+	d.Size = UDim2.new(1, -68, 0, 18)
+	d.Position = UDim2.new(0, 12, 0, 34)
 	d.BackgroundTransparency = 1
 	d.Text = desc or ""
 	d.TextColor3 = T.dim
@@ -283,93 +270,109 @@ local function createCard(title, desc)
 	return card
 end
 
-local function addToggle(card, key, default)
+local function addToggle(card, key, default, onChange)
 	Config[key] = default
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 44, 0, 24)
-	btn.Position = UDim2.new(1, -56, 0.5, -12)
+	btn.Size = UDim2.new(0, 42, 0, 22)
+	btn.Position = UDim2.new(1, -54, 0.5, -11)
 	btn.BackgroundColor3 = default and T.accent or Color3.fromRGB(45, 52, 70)
 	btn.Text = ""
 	btn.Parent = card
-	corner(btn, 12)
+	corner(btn, 11)
 
 	local circle = Instance.new("Frame", btn)
-	circle.Size = UDim2.new(0, 18, 0, 18)
-	circle.Position = default and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+	circle.Size = UDim2.new(0, 16, 0, 16)
+	circle.Position = default and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
 	circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	corner(circle, 9)
+	corner(circle, 8)
 
 	btn.MouseButton1Click:Connect(function()
 		Config[key] = not Config[key]
-		TS:Create(btn, TweenInfo.new(0.18), {
+		TS:Create(btn, TweenInfo.new(0.15), {
 			BackgroundColor3 = Config[key] and T.accent or Color3.fromRGB(45, 52, 70)
 		}):Play()
-		TS:Create(circle, TweenInfo.new(0.18), {
-			Position = Config[key] and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+		TS:Create(circle, TweenInfo.new(0.15), {
+			Position = Config[key] and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
 		}):Play()
+		if onChange then onChange(Config[key]) end
 	end)
+end
+
+local FloatGui, FloatBtn
+
+local function updateFloatVisibility()
+	if FloatGui then
+		FloatGui.Enabled = Config.ShowFloat
+	end
 end
 
 local function loadVisuals()
 	clearContent()
 	local list = {
-		{"Ball Velocity", "Mostra velocidade da bola em tempo real", "BallVelocity"},
-		{"Overlays (Ping / FPS)", "Exibe Ping e FPS na tela", "Overlays"},
+		{"Ball Velocity", "Mostra velocidade da bola", "BallVelocity"},
+		{"Overlays (Ping / FPS)", "Exibe Ping e FPS", "Overlays"},
 	}
 	for _, v in ipairs(list) do
 		local card = createCard(v[1], v[2])
 		addToggle(card, v[3], false)
 	end
-	ContentScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 78)
+	ContentScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 76)
 end
 
 local function loadSecurity()
 	clearContent()
 	local list = {
-		{"Anti Kick", "Bloqueia tentativas de Kick", "AntiKick"},
+		{"Anti Kick", "Bloqueia Kick", "AntiKick"},
 		{"Anti Ban", "Proteção extra", "AntiBan"},
-		{"Anti Teleport", "Bloqueia teleports forçados", "AntiTeleport"},
+		{"Anti Teleport", "Bloqueia teleports", "AntiTeleport"},
 	}
 	for _, v in ipairs(list) do
 		local card = createCard(v[1], v[2])
 		addToggle(card, v[3], true)
 	end
-	ContentScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 78)
+	ContentScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 76)
 end
 
 local function loadConfig()
 	clearContent()
-	ContentScroll.CanvasSize = UDim2.new(0, 0, 0, 100)
+	local card = createCard("Botão Flutuante", "Mostra ou esconde o botão J")
+	addToggle(card, "ShowFloat", Config.ShowFloat, function(v)
+		Theme.showFloat = v
+		saveJSON("Theme", Theme)
+		updateFloatVisibility()
+		Notify("Config", v and "Float ativado" or "Float desativado", "success")
+	end)
+	ContentScroll.CanvasSize = UDim2.new(0, 0, 0, 90)
 end
 
 for i, cat in ipairs(categories) do
 	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(1, -10, 0, 38)
-	btn.Position = UDim2.new(0, 5, 0, 78 + (i-1)*46)
+	btn.Size = UDim2.new(1, -8, 0, 36)
+	btn.Position = UDim2.new(0, 4, 0, 58 + (i-1)*44)
 	btn.BackgroundColor3 = T.sidebar
 	btn.BackgroundTransparency = 1
 	btn.Text = ""
 	btn.AutoButtonColor = false
 	btn.Parent = Sidebar
-	corner(btn, 9)
+	corner(btn, 8)
 
 	local icon = Instance.new("TextLabel", btn)
-	icon.Size = UDim2.new(0, 28, 1, 0)
-	icon.Position = UDim2.new(0, 6, 0, 0)
+	icon.Size = UDim2.new(0, 26, 1, 0)
+	icon.Position = UDim2.new(0, 5, 0, 0)
 	icon.BackgroundTransparency = 1
 	icon.Text = cat.Icon
 	icon.TextColor3 = T.dim
 	icon.Font = Enum.Font.Gotham
-	icon.TextSize = 15
+	icon.TextSize = 14
 
 	local label = Instance.new("TextLabel", btn)
-	label.Size = UDim2.new(1, -40, 1, 0)
-	label.Position = UDim2.new(0, 36, 0, 0)
+	label.Size = UDim2.new(1, -36, 1, 0)
+	label.Position = UDim2.new(0, 32, 0, 0)
 	label.BackgroundTransparency = 1
 	label.Text = cat.Name
 	label.TextColor3 = T.dim
 	label.Font = Enum.Font.GothamMedium
-	label.TextSize = 13
+	label.TextSize = 12
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Visible = not isMobile
 
@@ -380,7 +383,7 @@ for i, cat in ipairs(categories) do
 			if b.Label then b.Label.TextColor3 = T.dim end
 		end
 		btn.BackgroundColor3 = Color3.fromRGB(20, 28, 48)
-		btn.BackgroundTransparency = 0.3
+		btn.BackgroundTransparency = 0.25
 		icon.TextColor3 = T.accent
 		if label then label.TextColor3 = T.accent end
 
@@ -394,60 +397,60 @@ for i, cat in ipairs(categories) do
 end
 
 local Content = Instance.new("Frame")
-Content.Size = UDim2.new(1, isMobile and -72 or -166, 1, -52)
-Content.Position = UDim2.new(0, isMobile and 68 or 162, 0, 52)
+Content.Size = UDim2.new(1, isMobile and -70 or -158, 1, -50)
+Content.Position = UDim2.new(0, isMobile and 66 or 154, 0, 50)
 Content.BackgroundTransparency = 1
 Content.Parent = Main
 
 ContentScroll = Instance.new("ScrollingFrame")
-ContentScroll.Size = UDim2.new(1, -10, 1, -10)
-ContentScroll.Position = UDim2.new(0, 5, 0, 5)
+ContentScroll.Size = UDim2.new(1, -8, 1, -8)
+ContentScroll.Position = UDim2.new(0, 4, 0, 4)
 ContentScroll.BackgroundTransparency = 1
 ContentScroll.BorderSizePixel = 0
 ContentScroll.ScrollBarThickness = 3
 ContentScroll.ScrollBarImageColor3 = T.accent
-ContentScroll.CanvasSize = UDim2.new(0, 0, 0, 400)
+ContentScroll.CanvasSize = UDim2.new(0, 0, 0, 300)
 ContentScroll.Parent = Content
-Instance.new("UIListLayout", ContentScroll).Padding = UDim.new(0, 9)
+Instance.new("UIListLayout", ContentScroll).Padding = UDim.new(0, 8)
 
 local Header = Instance.new("Frame")
-Header.Size = UDim2.new(1, isMobile and -72 or -166, 0, 48)
-Header.Position = UDim2.new(0, isMobile and 68 or 162, 0, 0)
+Header.Size = UDim2.new(1, isMobile and -70 or -158, 0, 46)
+Header.Position = UDim2.new(0, isMobile and 66 or 154, 0, 0)
 Header.BackgroundTransparency = 1
 Header.Parent = Main
 
 local Title = Instance.new("TextLabel", Header)
-Title.Size = UDim2.new(1, -80, 1, 0)
-Title.Position = UDim2.new(0, 12, 0, 0)
+Title.Size = UDim2.new(1, -70, 1, 0)
+Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
 Title.Text = "VISUALS"
 Title.TextColor3 = T.text
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 15
+Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
 local CloseBtn = Instance.new("TextButton", Header)
-CloseBtn.Size = UDim2.new(0, 32, 0, 32)
-CloseBtn.Position = UDim2.new(1, -42, 0.5, -16)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -38, 0.5, -15)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(30, 38, 55)
 CloseBtn.Text = "×"
 CloseBtn.TextColor3 = T.text
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.TextSize = 16
-corner(CloseBtn, 8)
+corner(CloseBtn, 7)
 CloseBtn.MouseButton1Click:Connect(function()
 	Main.Visible = false
 end)
 
 if CatButtons["Visuals"] then
 	CatButtons["Visuals"].Button.BackgroundColor3 = Color3.fromRGB(20, 28, 48)
-	CatButtons["Visuals"].Button.BackgroundTransparency = 0.3
+	CatButtons["Visuals"].Button.BackgroundTransparency = 0.25
 	CatButtons["Visuals"].Icon.TextColor3 = T.accent
 	if CatButtons["Visuals"].Label then CatButtons["Visuals"].Label.TextColor3 = T.accent end
 	loadVisuals()
 end
 
--- Drag PC
+-- Drag
 if not isMobile then
 	local dragging, dragStart, startPos
 	Header.InputBegan:Connect(function(input)
@@ -469,22 +472,23 @@ if not isMobile then
 end
 
 -- ====================== FLOAT BUTTON ======================
-local FloatGui = Instance.new("ScreenGui")
+FloatGui = Instance.new("ScreenGui")
 FloatGui.Name = "JARVIS_Float"
 FloatGui.ResetOnSpawn = false
 FloatGui.IgnoreGuiInset = true
 FloatGui.DisplayOrder = 999
+FloatGui.Enabled = Config.ShowFloat
 FloatGui.Parent = PG
 
-local FloatBtn = Instance.new("ImageButton")
+FloatBtn = Instance.new("ImageButton")
 FloatBtn.Size = UDim2.new(0, Theme.floatSize or 56, 0, Theme.floatSize or 56)
-FloatBtn.Position = UDim2.new(0, 16, 0.55, 0)
+FloatBtn.Position = UDim2.new(0, 14, 0.55, 0)
 FloatBtn.BackgroundColor3 = T.accent
 FloatBtn.BorderSizePixel = 0
 FloatBtn.Image = ""
 FloatBtn.Parent = FloatGui
-corner(FloatBtn, 14)
-stroke(FloatBtn, Color3.fromRGB(255,255,255), 1.5, 0.4)
+corner(FloatBtn, 13)
+stroke(FloatBtn, Color3.fromRGB(255,255,255), 1.4, 0.35)
 
 local FloatTxt = Instance.new("TextLabel", FloatBtn)
 FloatTxt.Size = UDim2.new(1, 0, 1, 0)
@@ -522,25 +526,23 @@ do
 	end)
 end
 
--- ====================== 3 / 4 FINGER TOGGLE ======================
+-- ====================== 2 DEDOS ======================
 local touchCount = 0
 local lastToggle = 0
 
-UIS.TouchStarted:Connect(function(touch, processed)
+UIS.TouchStarted:Connect(function()
 	touchCount = touchCount + 1
 end)
 
-UIS.TouchEnded:Connect(function(touch, processed)
+UIS.TouchEnded:Connect(function()
 	touchCount = math.max(0, touchCount - 1)
 end)
 
 UIS.InputBegan:Connect(function(input, processed)
 	if processed then return end
-
-	-- 3 ou 4 dedos
 	if input.UserInputType == Enum.UserInputType.Touch then
-		task.wait(0.05)
-		if touchCount >= 3 and tick() - lastToggle > 0.4 then
+		task.wait(0.04)
+		if touchCount >= 2 and tick() - lastToggle > 0.35 then
 			lastToggle = tick()
 			Main.Visible = not Main.Visible
 			Notify("JARVIS", Main.Visible and "UI aberta" or "UI fechada", "success")
@@ -548,7 +550,6 @@ UIS.InputBegan:Connect(function(input, processed)
 	end
 end)
 
--- RightShift também
 UIS.InputBegan:Connect(function(input, g)
 	if not g and input.KeyCode == Enum.KeyCode.RightShift then
 		Main.Visible = not Main.Visible
@@ -563,8 +564,7 @@ task.spawn(function()
 			local old = mt.__namecall
 			setreadonly(mt, false)
 			mt.__namecall = newcclosure(function(self, ...)
-				local method = getnamecallmethod()
-				if method == "Kick" and Config.AntiKick then
+				if getnamecallmethod() == "Kick" and Config.AntiKick then
 					Notify("Security", "Kick bloqueado", "warning")
 					return
 				end
@@ -582,33 +582,33 @@ VelGui.ResetOnSpawn = false
 VelGui.Parent = CoreGui
 
 local VelFrame = Instance.new("Frame")
-VelFrame.Size = UDim2.new(0, 145, 0, 50)
-VelFrame.Position = UDim2.new(0, 14, 0, 110)
+VelFrame.Size = UDim2.new(0, 140, 0, 48)
+VelFrame.Position = UDim2.new(0, 12, 0, 100)
 VelFrame.BackgroundColor3 = T.card
 VelFrame.BackgroundTransparency = Theme.cardTrans
 VelFrame.BorderSizePixel = 0
 VelFrame.Visible = false
 VelFrame.Parent = VelGui
-corner(VelFrame, 9)
-stroke(VelFrame, T.accent, 1.2, 0.3)
+corner(VelFrame, 8)
+stroke(VelFrame, T.accent, 1.1, 0.3)
 
 local VelTitle = Instance.new("TextLabel", VelFrame)
-VelTitle.Size = UDim2.new(1, 0, 0, 18)
-VelTitle.Position = UDim2.new(0, 0, 0, 4)
+VelTitle.Size = UDim2.new(1, 0, 0, 16)
+VelTitle.Position = UDim2.new(0, 0, 0, 3)
 VelTitle.BackgroundTransparency = 1
 VelTitle.Text = "Ball Velocity"
 VelTitle.TextColor3 = T.accent
 VelTitle.Font = Enum.Font.GothamBold
-VelTitle.TextSize = 11
+VelTitle.TextSize = 10
 
 local VelText = Instance.new("TextLabel", VelFrame)
-VelText.Size = UDim2.new(1, -10, 0, 24)
-VelText.Position = UDim2.new(0, 8, 0, 22)
+VelText.Size = UDim2.new(1, -8, 0, 22)
+VelText.Position = UDim2.new(0, 6, 0, 20)
 VelText.BackgroundTransparency = 1
 VelText.Text = "0.0"
 VelText.TextColor3 = T.text
 VelText.Font = Enum.Font.Gotham
-VelText.TextSize = 15
+VelText.TextSize = 14
 VelText.TextXAlignment = Enum.TextXAlignment.Left
 
 local OverGui = Instance.new("ScreenGui")
@@ -617,20 +617,20 @@ OverGui.ResetOnSpawn = false
 OverGui.Parent = CoreGui
 
 local OverLabel = Instance.new("TextLabel")
-OverLabel.Size = UDim2.new(0, 180, 0, 28)
-OverLabel.Position = UDim2.new(1, -195, 0, 12)
+OverLabel.Size = UDim2.new(0, 170, 0, 26)
+OverLabel.Position = UDim2.new(1, -185, 0, 10)
 OverLabel.BackgroundTransparency = 1
 OverLabel.Text = ""
 OverLabel.TextColor3 = T.accent
 OverLabel.Font = Enum.Font.GothamBold
-OverLabel.TextSize = 13
+OverLabel.TextSize = 12
 OverLabel.TextXAlignment = Enum.TextXAlignment.Right
 OverLabel.Visible = false
 OverLabel.Parent = OverGui
 
 local lastTick, frames, fps = tick(), 0, 60
 RS.RenderStepped:Connect(function()
-	frames += 1
+	frames = frames + 1
 	if tick() - lastTick >= 1 then
 		fps = frames
 		frames = 0
@@ -655,11 +655,11 @@ RS.RenderStepped:Connect(function()
 		pcall(function()
 			ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
 		end)
-		OverLabel.Text = "Ping: "..ping.."  |  FPS: "..fps
+		OverLabel.Text = "Ping: "..tostring(ping).."  |  FPS: "..tostring(fps)
 	else
 		OverLabel.Visible = false
 	end
 end)
 
-Notify("DRAK JARVIS", "UI carregada · 3 dedos para abrir/fechar", "success")
-print("[DRAK JARVIS] Loaded with 3/4 finger toggle.")
+Notify("DRAK JARVIS", "Carregado · 2 dedos para abrir/fechar", "success")
+print("[DRAK JARVIS] OK - 2 finger toggle + float config")
