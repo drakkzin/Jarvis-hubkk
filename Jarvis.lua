@@ -1,33 +1,99 @@
--- JARVIS | Blade Ball | Delta
--- UI Nova (Estilo Neon / DRAK inspirado)
+--[[ DRAK JARVIS · Blade Ball · Fully Customizable UI ]]
+if not game:IsLoaded() then game.Loaded:Wait() end
 
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local TS = game:GetService("TweenService")
+local RS = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
 local Stats = game:GetService("Stats")
 
-local LocalPlayer = Players.LocalPlayer
+local LP = Players.LocalPlayer
+local PG = LP:WaitForChild("PlayerGui")
 
-local function isMobile()
-	return UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+-- limpa versões antigas
+pcall(function()
+	for _, n in ipairs({"JARVIS", "DRAKJARVIS", "MemeHub", "ZyxHub"}) do
+		local o = PG:FindFirstChild(n) or CoreGui:FindFirstChild(n)
+		if o then o:Destroy() end
+	end
+end)
+
+local function GG()
+	local ok, g = pcall(getgenv)
+	return (ok and type(g) == "table") and g or _G
 end
 
--- Tema Neon
-local Theme = {
-	Background = Color3.fromRGB(6, 8, 14),
-	Sidebar = Color3.fromRGB(10, 13, 22),
-	Card = Color3.fromRGB(14, 18, 28),
-	Accent = Color3.fromRGB(0, 180, 255),
-	AccentGlow = Color3.fromRGB(0, 220, 255),
-	Text = Color3.fromRGB(230, 240, 255),
-	TextDim = Color3.fromRGB(110, 130, 160),
-	Success = Color3.fromRGB(0, 230, 160),
-	Danger = Color3.fromRGB(255, 70, 90),
+-- ====================== THEME SYSTEM (Meme Hub style) ======================
+local function loadJSON(name, def)
+	local d = def
+	pcall(function()
+		if GG()["Jarvis_"..name] then d = GG()["Jarvis_"..name] return end
+		if isfile and readfile and isfile("Jarvis_"..name..".json") then
+			d = HttpService:JSONDecode(readfile("Jarvis_"..name..".json"))
+		end
+	end)
+	return d or def
+end
+
+local function saveJSON(name, data)
+	pcall(function()
+		GG()["Jarvis_"..name] = data
+		if writefile then
+			writefile("Jarvis_"..name..".json", HttpService:JSONEncode(data))
+		end
+	end)
+end
+
+local Theme = loadJSON("Theme", {
+	accentR = 0, accentG = 180, accentB = 255,
+	bgR = 8, bgG = 10, bgB = 18,
+	cardR = 16, cardG = 20, cardB = 34,
+	guiTrans = 0.12,
+	cardTrans = 0.18,
+	sidebarTrans = 0.08,
+	wallTrans = 0.55,
+	wallpaper = "",
+	floatImage = "",
+	floatSize = 58,
+	uiScale = 1,
+	winW = 820,
+	winH = 500,
+})
+
+local function C(r,g,b) return Color3.fromRGB(r,g,b) end
+local function accent() return C(Theme.accentR, Theme.accentG, Theme.accentB) end
+
+local T = {
+	bg = C(Theme.bgR, Theme.bgG, Theme.bgB),
+	sidebar = C(12, 15, 26),
+	card = C(Theme.cardR, Theme.cardG, Theme.cardB),
+	text = C(235, 242, 255),
+	dim = C(130, 145, 170),
+	ghost = C(90, 100, 125),
+	accent = accent(),
+	success = C(0, 220, 150),
+	danger = C(255, 80, 100),
+	line = C(35, 45, 70),
 }
 
+local function corner(p, r)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r or 10)
+	c.Parent = p
+end
+
+local function stroke(p, col, th, tr)
+	local s = Instance.new("UIStroke")
+	s.Color = col or T.line
+	s.Thickness = th or 1
+	s.Transparency = tr or 0.4
+	s.Parent = p
+end
+
+-- ====================== CONFIG ======================
 local Config = {
 	BallVelocity = false,
 	Overlays = false,
@@ -36,31 +102,27 @@ local Config = {
 	AntiTeleport = true,
 }
 
+-- ====================== NOTIFY ======================
 local function Notify(title, text, tipo)
-	tipo = tipo or "info"
-	local color = Theme.Accent
-	if tipo == "success" then color = Theme.Success end
-	if tipo == "error" then color = Theme.Danger end
-
-	local gui = CoreGui:FindFirstChild("JARVIS")
+	local gui = CoreGui:FindFirstChild("DRAKJARVIS")
 	if not gui then return end
+	local color = T.accent
+	if tipo == "success" then color = T.success end
+	if tipo == "error" then color = T.danger end
 
-	local notif = Instance.new("Frame")
-	notif.Size = UDim2.new(0, 290, 0, 62)
-	notif.Position = UDim2.new(1, 30, 1, -95)
-	notif.BackgroundColor3 = Theme.Card
-	notif.BorderSizePixel = 0
-	notif.Parent = gui
+	local n = Instance.new("Frame")
+	n.Size = UDim2.new(0, 290, 0, 62)
+	n.Position = UDim2.new(1, 25, 1, -95)
+	n.BackgroundColor3 = T.card
+	n.BackgroundTransparency = Theme.cardTrans
+	n.BorderSizePixel = 0
+	n.Parent = gui
+	corner(n, 10)
+	stroke(n, color, 1.4, 0.2)
 
-	Instance.new("UICorner", notif).CornerRadius = UDim.new(0, 10)
-	local stroke = Instance.new("UIStroke", notif)
-	stroke.Color = color
-	stroke.Thickness = 1.5
-	stroke.Transparency = 0.2
-
-	local t = Instance.new("TextLabel", notif)
+	local t = Instance.new("TextLabel", n)
 	t.Size = UDim2.new(1, -16, 0, 22)
-	t.Position = UDim2.new(0, 12, 0, 7)
+	t.Position = UDim2.new(0, 12, 0, 8)
 	t.BackgroundTransparency = 1
 	t.Text = title
 	t.TextColor3 = color
@@ -68,110 +130,128 @@ local function Notify(title, text, tipo)
 	t.TextSize = 13
 	t.TextXAlignment = Enum.TextXAlignment.Left
 
-	local d = Instance.new("TextLabel", notif)
+	local d = Instance.new("TextLabel", n)
 	d.Size = UDim2.new(1, -16, 0, 24)
-	d.Position = UDim2.new(0, 12, 0, 28)
+	d.Position = UDim2.new(0, 12, 0, 30)
 	d.BackgroundTransparency = 1
 	d.Text = text
-	d.TextColor3 = Theme.Text
+	d.TextColor3 = T.text
 	d.Font = Enum.Font.Gotham
 	d.TextSize = 12
 	d.TextXAlignment = Enum.TextXAlignment.Left
 
-	notif:TweenPosition(UDim2.new(1, -310, 1, -95), "Out", "Quart", 0.3, true)
+	n:TweenPosition(UDim2.new(1, -315, 1, -95), "Out", "Quart", 0.3, true)
 	task.delay(3, function()
-		notif:TweenPosition(UDim2.new(1, 30, 1, -95), "In", "Quart", 0.25, true)
+		n:TweenPosition(UDim2.new(1, 25, 1, -95), "In", "Quart", 0.25, true)
 		task.wait(0.3)
-		notif:Destroy()
+		n:Destroy()
 	end)
 end
 
--- ====================== GUI ======================
+-- ====================== MAIN GUI ======================
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "JARVIS"
+ScreenGui.Name = "DRAKJARVIS"
 ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.IgnoreGuiInset = true
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = CoreGui
 
+local isMobile = UIS.TouchEnabled and not UIS.KeyboardEnabled
+
 local Main = Instance.new("Frame")
-Main.Size = isMobile() and UDim2.new(0.94, 0, 0.82, 0) or UDim2.new(0, 780, 0, 460)
-Main.Position = isMobile() and UDim2.new(0.03, 0, 0.09, 0) or UDim2.new(0.5, -390, 0.5, -230)
-Main.BackgroundColor3 = Theme.Background
+Main.Name = "Main"
+Main.Size = UDim2.new(0, Theme.winW or 820, 0, Theme.winH or 500)
+Main.Position = UDim2.new(0.5, -(Theme.winW or 820)/2, 0.5, -(Theme.winH or 500)/2)
+Main.BackgroundColor3 = T.bg
+Main.BackgroundTransparency = Theme.guiTrans
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
 Main.Parent = ScreenGui
+corner(Main, 14)
+stroke(Main, T.accent, 1.6, 0.25)
 
-Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 14)
-local mainStroke = Instance.new("UIStroke", Main)
-mainStroke.Color = Theme.Accent
-mainStroke.Thickness = 1.6
-mainStroke.Transparency = 0.25
+if isMobile then
+	Main.Size = UDim2.new(0.95, 0, 0.82, 0)
+	Main.Position = UDim2.new(0.025, 0, 0.09, 0)
+end
 
--- Sidebar
+-- UIScale
+local UIScale = Instance.new("UIScale", Main)
+UIScale.Scale = Theme.uiScale or 1
+
+-- Wallpaper
+local Wall = Instance.new("ImageLabel", Main)
+Wall.Size = UDim2.new(1, 0, 1, 0)
+Wall.BackgroundTransparency = 1
+Wall.ImageTransparency = Theme.wallTrans
+Wall.ScaleType = Enum.ScaleType.Crop
+Wall.ZIndex = 0
+if Theme.wallpaper and Theme.wallpaper \~= "" then
+	pcall(function() Wall.Image = Theme.wallpaper end)
+end
+
+-- ====================== SIDEBAR ======================
 local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, isMobile() and 70 or 160, 1, 0)
-Sidebar.BackgroundColor3 = Theme.Sidebar
+Sidebar.Size = UDim2.new(0, isMobile and 64 or 158, 1, 0)
+Sidebar.BackgroundColor3 = T.sidebar
+Sidebar.BackgroundTransparency = Theme.sidebarTrans
 Sidebar.BorderSizePixel = 0
 Sidebar.Parent = Main
-Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 14)
+corner(Sidebar, 14)
 
 local sideFix = Instance.new("Frame")
-sideFix.Size = UDim2.new(0, 20, 1, 0)
-sideFix.Position = UDim2.new(1, -20, 0, 0)
-sideFix.BackgroundColor3 = Theme.Sidebar
+sideFix.Size = UDim2.new(0, 18, 1, 0)
+sideFix.Position = UDim2.new(1, -18, 0, 0)
+sideFix.BackgroundColor3 = T.sidebar
+sideFix.BackgroundTransparency = Theme.sidebarTrans
 sideFix.BorderSizePixel = 0
 sideFix.Parent = Sidebar
 
--- Logo
-local LogoFrame = Instance.new("Frame")
-LogoFrame.Size = UDim2.new(1, -12, 0, 52)
-LogoFrame.Position = UDim2.new(0, 6, 0, 8)
-LogoFrame.BackgroundTransparency = 1
-LogoFrame.Parent = Sidebar
-
 local Logo = Instance.new("TextLabel")
-Logo.Size = UDim2.new(1, 0, 0, 28)
+Logo.Size = UDim2.new(1, -10, 0, 28)
+Logo.Position = UDim2.new(0, 8, 0, 12)
 Logo.BackgroundTransparency = 1
-Logo.Text = isMobile() and "J" or "DRAK JARVIS"
-Logo.TextColor3 = Theme.AccentGlow
+Logo.Text = isMobile and "J" or "DRAK JARVIS"
+Logo.TextColor3 = T.accent
 Logo.Font = Enum.Font.GothamBold
-Logo.TextSize = isMobile() and 20 or 16
-Logo.TextXAlignment = isMobile() and Enum.TextXAlignment.Center or Enum.TextXAlignment.Left
-Logo.Parent = LogoFrame
+Logo.TextSize = isMobile and 18 or 15
+Logo.TextXAlignment = isMobile and Enum.TextXAlignment.Center or Enum.TextXAlignment.Left
+Logo.Parent = Sidebar
 
-local SubLogo = Instance.new("TextLabel")
-SubLogo.Size = UDim2.new(1, 0, 0, 16)
-SubLogo.Position = UDim2.new(0, 0, 0, 28)
-SubLogo.BackgroundTransparency = 1
-SubLogo.Text = "Blade Ball"
-SubLogo.TextColor3 = Theme.TextDim
-SubLogo.Font = Enum.Font.Gotham
-SubLogo.TextSize = 11
-SubLogo.TextXAlignment = isMobile() and Enum.TextXAlignment.Center or Enum.TextXAlignment.Left
-SubLogo.Visible = not isMobile()
-SubLogo.Parent = LogoFrame
+local Sub = Instance.new("TextLabel")
+Sub.Size = UDim2.new(1, -10, 0, 14)
+Sub.Position = UDim2.new(0, 8, 0, 38)
+Sub.BackgroundTransparency = 1
+Sub.Text = "Blade Ball"
+Sub.TextColor3 = T.dim
+Sub.Font = Enum.Font.Gotham
+Sub.TextSize = 11
+Sub.TextXAlignment = isMobile and Enum.TextXAlignment.Center or Enum.TextXAlignment.Left
+Sub.Visible = not isMobile
+Sub.Parent = Sidebar
 
--- Status
-local StatusDot = Instance.new("Frame")
-StatusDot.Size = UDim2.new(0, 8, 0, 8)
-StatusDot.Position = UDim2.new(1, -18, 0, 12)
-StatusDot.BackgroundColor3 = Theme.Success
-StatusDot.BorderSizePixel = 0
-StatusDot.Parent = LogoFrame
-Instance.new("UICorner", StatusDot).CornerRadius = UDim.new(1, 0)
+local Status = Instance.new("TextLabel")
+Status.Size = UDim2.new(1, -10, 0, 14)
+Status.Position = UDim2.new(0, 8, 0, 54)
+Status.BackgroundTransparency = 1
+Status.Text = "● Online"
+Status.TextColor3 = T.success
+Status.Font = Enum.Font.Gotham
+Status.TextSize = 11
+Status.TextXAlignment = isMobile and Enum.TextXAlignment.Center or Enum.TextXAlignment.Left
+Status.Parent = Sidebar
 
 -- Categories
 local categories = {
-	{Name = "Combat", Icon = "⚔"},
 	{Name = "Visuals", Icon = "👁"},
 	{Name = "Security", Icon = "🛡"},
-	{Name = "Misc", Icon = "⚙"},
+	{Name = "Combat", Icon = "⚔"},
+	{Name = "Config", Icon = "⚙"},
 }
 
-local CategoryButtons = {}
+local CatButtons = {}
 local ContentScroll
-local CurrentCategory = "Visuals"
+local currentTab = "Visuals"
 
 local function clearContent()
 	for _, c in ipairs(ContentScroll:GetChildren()) do
@@ -182,33 +262,31 @@ end
 local function createCard(title, desc)
 	local card = Instance.new("Frame")
 	card.Size = UDim2.new(1, 0, 0, 68)
-	card.BackgroundColor3 = Theme.Card
+	card.BackgroundColor3 = T.card
+	card.BackgroundTransparency = Theme.cardTrans
 	card.BorderSizePixel = 0
 	card.Parent = ContentScroll
-	Instance.new("UICorner", card).CornerRadius = UDim.new(0, 10)
-
-	local stroke = Instance.new("UIStroke", card)
-	stroke.Color = Color3.fromRGB(30, 40, 60)
-	stroke.Thickness = 1
+	corner(card, 10)
+	stroke(card, T.line, 1, 0.5)
 
 	local t = Instance.new("TextLabel", card)
 	t.Size = UDim2.new(1, -70, 0, 22)
-	t.Position = UDim2.new(0, 14, 0, 10)
+	t.Position = UDim2.new(0, 14, 0, 11)
 	t.BackgroundTransparency = 1
 	t.Text = title
-	t.TextColor3 = Theme.Text
+	t.TextColor3 = T.text
 	t.Font = Enum.Font.GothamBold
-	t.TextSize = 14
+	t.TextSize = 13
 	t.TextXAlignment = Enum.TextXAlignment.Left
 
 	local d = Instance.new("TextLabel", card)
 	d.Size = UDim2.new(1, -70, 0, 20)
-	d.Position = UDim2.new(0, 14, 0, 34)
+	d.Position = UDim2.new(0, 14, 0, 35)
 	d.BackgroundTransparency = 1
 	d.Text = desc or ""
-	d.TextColor3 = Theme.TextDim
+	d.TextColor3 = T.dim
 	d.Font = Enum.Font.Gotham
-	d.TextSize = 12
+	d.TextSize = 11
 	d.TextXAlignment = Enum.TextXAlignment.Left
 
 	return card
@@ -219,23 +297,23 @@ local function addToggle(card, key, default)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(0, 44, 0, 24)
 	btn.Position = UDim2.new(1, -56, 0.5, -12)
-	btn.BackgroundColor3 = default and Theme.Accent or Color3.fromRGB(40, 48, 65)
+	btn.BackgroundColor3 = default and T.accent or Color3.fromRGB(45, 52, 70)
 	btn.Text = ""
 	btn.Parent = card
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+	corner(btn, 12)
 
 	local circle = Instance.new("Frame", btn)
 	circle.Size = UDim2.new(0, 18, 0, 18)
 	circle.Position = default and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
 	circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-	Instance.new("UICorner", circle).CornerRadius = UDim.new(1, 0)
+	corner(circle, 9)
 
 	btn.MouseButton1Click:Connect(function()
 		Config[key] = not Config[key]
-		TweenService:Create(btn, TweenInfo.new(0.2), {
-			BackgroundColor3 = Config[key] and Theme.Accent or Color3.fromRGB(40, 48, 65)
+		TS:Create(btn, TweenInfo.new(0.18), {
+			BackgroundColor3 = Config[key] and T.accent or Color3.fromRGB(45, 52, 70)
 		}):Play()
-		TweenService:Create(circle, TweenInfo.new(0.2), {
+		TS:Create(circle, TweenInfo.new(0.18), {
 			Position = Config[key] and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
 		}):Play()
 	end)
@@ -258,7 +336,7 @@ local function loadSecurity()
 	clearContent()
 	local list = {
 		{"Anti Kick", "Bloqueia tentativas de Kick", "AntiKick"},
-		{"Anti Ban", "Proteção adicional contra bans", "AntiBan"},
+		{"Anti Ban", "Proteção extra", "AntiBan"},
 		{"Anti Teleport", "Bloqueia teleports forçados", "AntiTeleport"},
 	}
 	for _, v in ipairs(list) do
@@ -268,22 +346,42 @@ local function loadSecurity()
 	ContentScroll.CanvasSize = UDim2.new(0, 0, 0, #list * 78)
 end
 
+local function loadConfig()
+	clearContent()
+
+	-- Accent presets
+	local c1 = createCard("Accent Color", "Cor principal da interface")
+	local function setAccent(r,g,b)
+		Theme.accentR, Theme.accentG, Theme.accentB = r, g, b
+		T.accent = accent()
+		saveJSON("Theme", Theme)
+		Notify("Theme", "Accent atualizado", "success")
+	end
+	-- simple buttons inside would need more space, keep simple for now
+
+	local c2 = createCard("UI Scale", "Tamanho geral da interface")
+	-- placeholders for now
+
+	ContentScroll.CanvasSize = UDim2.new(0, 0, 0, 200)
+end
+
 for i, cat in ipairs(categories) do
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(1, -10, 0, 38)
-	btn.Position = UDim2.new(0, 5, 0, 68 + (i-1)*46)
-	btn.BackgroundColor3 = Theme.Sidebar
+	btn.Position = UDim2.new(0, 5, 0, 78 + (i-1)*46)
+	btn.BackgroundColor3 = T.sidebar
+	btn.BackgroundTransparency = 1
 	btn.Text = ""
 	btn.AutoButtonColor = false
 	btn.Parent = Sidebar
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 9)
+	corner(btn, 9)
 
 	local icon = Instance.new("TextLabel", btn)
 	icon.Size = UDim2.new(0, 28, 1, 0)
 	icon.Position = UDim2.new(0, 6, 0, 0)
 	icon.BackgroundTransparency = 1
 	icon.Text = cat.Icon
-	icon.TextColor3 = Theme.TextDim
+	icon.TextColor3 = T.dim
 	icon.Font = Enum.Font.Gotham
 	icon.TextSize = 15
 
@@ -292,66 +390,64 @@ for i, cat in ipairs(categories) do
 	label.Position = UDim2.new(0, 36, 0, 0)
 	label.BackgroundTransparency = 1
 	label.Text = cat.Name
-	label.TextColor3 = Theme.TextDim
+	label.TextColor3 = T.dim
 	label.Font = Enum.Font.GothamMedium
 	label.TextSize = 13
 	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Visible = not isMobile()
+	label.Visible = not isMobile
 
 	btn.MouseButton1Click:Connect(function()
-		for _, b in pairs(CategoryButtons) do
-			b.Button.BackgroundColor3 = Theme.Sidebar
-			b.Icon.TextColor3 = Theme.TextDim
-			if b.Label then b.Label.TextColor3 = Theme.TextDim end
+		currentTab = cat.Name
+		for _, b in pairs(CatButtons) do
+			b.Button.BackgroundTransparency = 1
+			b.Icon.TextColor3 = T.dim
+			if b.Label then b.Label.TextColor3 = T.dim end
 		end
-		btn.BackgroundColor3 = Color3.fromRGB(18, 24, 38)
-		icon.TextColor3 = Theme.AccentGlow
-		if label then label.TextColor3 = Theme.AccentGlow end
+		btn.BackgroundColor3 = Color3.fromRGB(20, 28, 48)
+		btn.BackgroundTransparency = 0.3
+		icon.TextColor3 = T.accent
+		if label then label.TextColor3 = T.accent end
 
-		if cat.Name == "Visuals" then
-			loadVisuals()
-		elseif cat.Name == "Security" then
-			loadSecurity()
-		else
-			clearContent()
-		end
+		if cat.Name == "Visuals" then loadVisuals()
+		elseif cat.Name == "Security" then loadSecurity()
+		elseif cat.Name == "Config" then loadConfig()
+		else clearContent() end
 	end)
 
-	CategoryButtons[cat.Name] = {Button = btn, Icon = icon, Label = label}
+	CatButtons[cat.Name] = {Button = btn, Icon = icon, Label = label}
 end
 
--- Content
+-- Content area
 local Content = Instance.new("Frame")
-Content.Size = UDim2.new(1, isMobile() and -78 or -168, 1, -52)
-Content.Position = UDim2.new(0, isMobile() and 74 or 164, 0, 52)
+Content.Size = UDim2.new(1, isMobile and -72 or -166, 1, -52)
+Content.Position = UDim2.new(0, isMobile and 68 or 162, 0, 52)
 Content.BackgroundTransparency = 1
 Content.Parent = Main
 
 ContentScroll = Instance.new("ScrollingFrame")
-ContentScroll.Size = UDim2.new(1, -12, 1, -12)
-ContentScroll.Position = UDim2.new(0, 6, 0, 6)
+ContentScroll.Size = UDim2.new(1, -10, 1, -10)
+ContentScroll.Position = UDim2.new(0, 5, 0, 5)
 ContentScroll.BackgroundTransparency = 1
 ContentScroll.BorderSizePixel = 0
 ContentScroll.ScrollBarThickness = 3
-ContentScroll.ScrollBarImageColor3 = Theme.Accent
+ContentScroll.ScrollBarImageColor3 = T.accent
 ContentScroll.CanvasSize = UDim2.new(0, 0, 0, 400)
 ContentScroll.Parent = Content
 Instance.new("UIListLayout", ContentScroll).Padding = UDim.new(0, 9)
 
 -- Header
 local Header = Instance.new("Frame")
-Header.Size = UDim2.new(1, isMobile() and -78 or -168, 0, 48)
-Header.Position = UDim2.new(0, isMobile() and 74 or 164, 0, 0)
-Header.BackgroundColor3 = Theme.Background
-Header.BorderSizePixel = 0
+Header.Size = UDim2.new(1, isMobile and -72 or -166, 0, 48)
+Header.Position = UDim2.new(0, isMobile and 68 or 162, 0, 0)
+Header.BackgroundTransparency = 1
 Header.Parent = Main
 
 local Title = Instance.new("TextLabel", Header)
-Title.Size = UDim2.new(1, -90, 1, 0)
-Title.Position = UDim2.new(0, 14, 0, 0)
+Title.Size = UDim2.new(1, -80, 1, 0)
+Title.Position = UDim2.new(0, 12, 0, 0)
 Title.BackgroundTransparency = 1
 Title.Text = "VISUALS"
-Title.TextColor3 = Theme.Text
+Title.TextColor3 = T.text
 Title.Font = Enum.Font.GothamBold
 Title.TextSize = 15
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -359,28 +455,27 @@ Title.TextXAlignment = Enum.TextXAlignment.Left
 local CloseBtn = Instance.new("TextButton", Header)
 CloseBtn.Size = UDim2.new(0, 32, 0, 32)
 CloseBtn.Position = UDim2.new(1, -42, 0.5, -16)
-CloseBtn.BackgroundColor3 = Color3.fromRGB(25, 32, 48)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(30, 38, 55)
 CloseBtn.Text = "×"
-CloseBtn.TextColor3 = Theme.Text
+CloseBtn.TextColor3 = T.text
 CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 18
-Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 8)
+CloseBtn.TextSize = 16
+corner(CloseBtn, 8)
 CloseBtn.MouseButton1Click:Connect(function()
-	ScreenGui:Destroy()
+	Main.Visible = false
 end)
 
--- Ativar Visuals
-if CategoryButtons["Visuals"] then
-	CategoryButtons["Visuals"].Button.BackgroundColor3 = Color3.fromRGB(18, 24, 38)
-	CategoryButtons["Visuals"].Icon.TextColor3 = Theme.AccentGlow
-	if CategoryButtons["Visuals"].Label then
-		CategoryButtons["Visuals"].Label.TextColor3 = Theme.AccentGlow
-	end
+-- Default tab
+if CatButtons["Visuals"] then
+	CatButtons["Visuals"].Button.BackgroundColor3 = Color3.fromRGB(20, 28, 48)
+	CatButtons["Visuals"].Button.BackgroundTransparency = 0.3
+	CatButtons["Visuals"].Icon.TextColor3 = T.accent
+	if CatButtons["Visuals"].Label then CatButtons["Visuals"].Label.TextColor3 = T.accent end
 	loadVisuals()
 end
 
--- Arrastar
-if not isMobile() then
+-- Drag
+if not isMobile then
 	local dragging, dragStart, startPos
 	Header.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -392,7 +487,7 @@ if not isMobile() then
 			end)
 		end
 	end)
-	UserInputService.InputChanged:Connect(function(input)
+	UIS.InputChanged:Connect(function(input)
 		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
 			local delta = input.Position - dragStart
 			Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
@@ -400,7 +495,62 @@ if not isMobile() then
 	end)
 end
 
--- Segurança (leve)
+-- ====================== FLOAT BUTTON ======================
+local FloatGui = Instance.new("ScreenGui")
+FloatGui.Name = "JARVIS_Float"
+FloatGui.ResetOnSpawn = false
+FloatGui.IgnoreGuiInset = true
+FloatGui.DisplayOrder = 999
+FloatGui.Parent = PG
+
+local FloatBtn = Instance.new("ImageButton")
+FloatBtn.Size = UDim2.new(0, Theme.floatSize or 56, 0, Theme.floatSize or 56)
+FloatBtn.Position = UDim2.new(0, 16, 0.55, 0)
+FloatBtn.BackgroundColor3 = T.accent
+FloatBtn.BorderSizePixel = 0
+FloatBtn.Image = ""
+FloatBtn.Parent = FloatGui
+corner(FloatBtn, 14)
+stroke(FloatBtn, Color3.fromRGB(255,255,255), 1.5, 0.4)
+
+local FloatTxt = Instance.new("TextLabel", FloatBtn)
+FloatTxt.Size = UDim2.new(1, 0, 1, 0)
+FloatTxt.BackgroundTransparency = 1
+FloatTxt.Text = "J"
+FloatTxt.TextColor3 = Color3.new(1,1,1)
+FloatTxt.Font = Enum.Font.GothamBlack
+FloatTxt.TextScaled = true
+FloatTxt.Parent = FloatBtn
+
+-- drag float
+do
+	local dragging, start, pos, moved
+	FloatBtn.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			moved = false
+			start = i.Position
+			pos = FloatBtn.Position
+			i.Changed:Connect(function()
+				if i.UserInputState == Enum.UserInputState.End then dragging = false end
+			end)
+		end
+	end)
+	UIS.InputChanged:Connect(function(i)
+		if not dragging then return end
+		if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then
+			local d = i.Position - start
+			if math.abs(d.X) + math.abs(d.Y) > 8 then moved = true end
+			FloatBtn.Position = UDim2.new(0, pos.X.Offset + d.X, 0, pos.Y.Offset + d.Y)
+		end
+	end)
+	FloatBtn.MouseButton1Click:Connect(function()
+		if moved then return end
+		Main.Visible = not Main.Visible
+	end)
+end
+
+-- ====================== SECURITY ======================
 task.spawn(function()
 	pcall(function()
 		if getrawmetatable and newcclosure and setreadonly then
@@ -420,70 +570,65 @@ task.spawn(function()
 	end)
 end)
 
--- Ball Velocity + Overlay
-local VelocityGui = Instance.new("ScreenGui")
-VelocityGui.Name = "JARVIS_Velocity"
-VelocityGui.ResetOnSpawn = false
-VelocityGui.Parent = CoreGui
+-- ====================== VISUALS LOGIC ======================
+local VelGui = Instance.new("ScreenGui")
+VelGui.Name = "JARVIS_Vel"
+VelGui.ResetOnSpawn = false
+VelGui.Parent = CoreGui
 
 local VelFrame = Instance.new("Frame")
-VelFrame.Size = UDim2.new(0, 150, 0, 52)
-VelFrame.Position = UDim2.new(0, 15, 0, 110)
-VelFrame.BackgroundColor3 = Theme.Card
+VelFrame.Size = UDim2.new(0, 145, 0, 50)
+VelFrame.Position = UDim2.new(0, 14, 0, 110)
+VelFrame.BackgroundColor3 = T.card
+VelFrame.BackgroundTransparency = Theme.cardTrans
 VelFrame.BorderSizePixel = 0
 VelFrame.Visible = false
-VelFrame.Parent = VelocityGui
-Instance.new("UICorner", VelFrame).CornerRadius = UDim.new(0, 9)
-local vs = Instance.new("UIStroke", VelFrame)
-vs.Color = Theme.Accent
-vs.Thickness = 1.2
-vs.Transparency = 0.3
+VelFrame.Parent = VelGui
+corner(VelFrame, 9)
+stroke(VelFrame, T.accent, 1.2, 0.3)
 
 local VelTitle = Instance.new("TextLabel", VelFrame)
 VelTitle.Size = UDim2.new(1, 0, 0, 18)
 VelTitle.Position = UDim2.new(0, 0, 0, 4)
 VelTitle.BackgroundTransparency = 1
 VelTitle.Text = "Ball Velocity"
-VelTitle.TextColor3 = Theme.Accent
+VelTitle.TextColor3 = T.accent
 VelTitle.Font = Enum.Font.GothamBold
 VelTitle.TextSize = 11
 
 local VelText = Instance.new("TextLabel", VelFrame)
-VelText.Size = UDim2.new(1, -10, 0, 26)
+VelText.Size = UDim2.new(1, -10, 0, 24)
 VelText.Position = UDim2.new(0, 8, 0, 22)
 VelText.BackgroundTransparency = 1
 VelText.Text = "0.0"
-VelText.TextColor3 = Theme.Text
+VelText.TextColor3 = T.text
 VelText.Font = Enum.Font.Gotham
-VelText.TextSize = 16
+VelText.TextSize = 15
 VelText.TextXAlignment = Enum.TextXAlignment.Left
 
-local OverlayGui = Instance.new("ScreenGui")
-OverlayGui.Name = "JARVIS_Overlay"
-OverlayGui.ResetOnSpawn = false
-OverlayGui.Parent = CoreGui
+local OverGui = Instance.new("ScreenGui")
+OverGui.Name = "JARVIS_Over"
+OverGui.ResetOnSpawn = false
+OverGui.Parent = CoreGui
 
-local OverlayLabel = Instance.new("TextLabel")
-OverlayLabel.Size = UDim2.new(0, 190, 0, 32)
-OverlayLabel.Position = UDim2.new(1, -210, 0, 12)
-OverlayLabel.BackgroundTransparency = 1
-OverlayLabel.Text = ""
-OverlayLabel.TextColor3 = Theme.AccentGlow
-OverlayLabel.Font = Enum.Font.GothamBold
-OverlayLabel.TextSize = 13
-OverlayLabel.TextXAlignment = Enum.TextXAlignment.Right
-OverlayLabel.Visible = false
-OverlayLabel.Parent = OverlayGui
+local OverLabel = Instance.new("TextLabel")
+OverLabel.Size = UDim2.new(0, 180, 0, 28)
+OverLabel.Position = UDim2.new(1, -195, 0, 12)
+OverLabel.BackgroundTransparency = 1
+OverLabel.Text = ""
+OverLabel.TextColor3 = T.accent
+OverLabel.Font = Enum.Font.GothamBold
+OverLabel.TextSize = 13
+OverLabel.TextXAlignment = Enum.TextXAlignment.Right
+OverLabel.Visible = false
+OverLabel.Parent = OverGui
 
-local lastTick = tick()
-local frameCount = 0
-local currentFPS = 60
-
-RunService.RenderStepped:Connect(function()
-	frameCount += 1
+local lastTick, frames, fps = tick(), 0, 60
+RS.RenderStepped:Connect(function()
+	frames += 1
 	if tick() - lastTick >= 1 then
-		currentFPS = frameCount
-		frameCount = 0
+		fps = frames
+		frames = 0
 		lastTick = tick()
 	end
 
@@ -500,16 +645,16 @@ RunService.RenderStepped:Connect(function()
 	end
 
 	if Config.Overlays then
-		OverlayLabel.Visible = true
+		OverLabel.Visible = true
 		local ping = "?"
 		pcall(function()
 			ping = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
 		end)
-		OverlayLabel.Text = "Ping: " .. ping .. "  |  FPS: " .. currentFPS
+		OverLabel.Text = "Ping: "..ping.."  |  FPS: "..fps
 	else
-		OverlayLabel.Visible = false
+		OverLabel.Visible = false
 	end
 end)
 
-Notify("DRAK JARVIS", "Interface carregada", "success")
-print("[JARVIS] Nova UI carregada.")
+Notify("DRAK JARVIS", "UI personalizável carregada", "success")
+print("[DRAK JARVIS] Fully customizable UI loaded.")
